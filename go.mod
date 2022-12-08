@@ -2,7 +2,11 @@ module github.com/caiomp87/sword-health-challenge
 
 go 1.18
 
-require github.com/gin-gonic/gin v1.8.1
+require (
+	github.com/gin-gonic/gin v1.8.1
+	github.com/go-sql-driver/mysql v1.7.0
+	github.com/google/uuid v1.3.0
+)
 
 require (
 	github.com/gin-contrib/sse v0.1.0 // indirect

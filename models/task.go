@@ -3,11 +3,11 @@ package models
 import "time"
 
 type Task struct {
-	ID          string
-	Name        string
-	Summary     string
-	CreatedAt   time.Time
-	PerformedAt time.Time
+	ID          string    `json:"id,omitempty"`
+	Name        string    `json:"name,omitempty"`
+	Summary     string    `json:"summary,omitempty"`
+	CreatedAt   time.Time `json:"createdAt,omitempty"`
+	PerformedAt time.Time `json:"performedAt,omitempty"`
 }
 
 func NewTask(id, name, summary string) *Task {

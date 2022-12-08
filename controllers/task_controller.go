@@ -9,16 +9,19 @@ import (
 	"github.com/caiomp87/sword-health-challenge/models"
 	"github.com/caiomp87/sword-health-challenge/repository"
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 )
 
 func CreateTask(c *gin.Context) {
-	var task *models.Task
-	if err := c.BindJSON(&task); err != nil {
+	var taskRaw *models.Task
+	if err := c.BindJSON(&taskRaw); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
 			"error": err.Error(),
 		})
 		return
 	}
+
+	task := models.NewTask(uuid.New().String(), taskRaw.Name, taskRaw.Summary)
 
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
 	defer cancel()

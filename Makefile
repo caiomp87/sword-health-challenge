@@ -9,3 +9,6 @@ migrate-down:
 
 generate-sqlc:
 	sqlc generate
+
+run:
+	go run main.go
