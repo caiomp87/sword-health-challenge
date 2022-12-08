@@ -1,0 +1,1 @@
+CREATE TABLE tasks (id VARCHAR(36) NOT NULL PRIMARY KEY, name VARCHAR(50), summary VARCHAR(2500), createdAt DATETIME, performedAt DATETIME);
