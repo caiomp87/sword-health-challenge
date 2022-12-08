@@ -5,9 +5,9 @@ import (
 	"database/sql"
 	"time"
 
+	"github.com/caiomp87/sword-health-challenge/db/sqlc"
 	"github.com/caiomp87/sword-health-challenge/interfaces"
 	"github.com/caiomp87/sword-health-challenge/models"
-	"github.com/caiomp87/sword-health-challenge/sql/sqlc"
 )
 
 var TaskRepository interfaces.ITask
@@ -38,7 +38,7 @@ func (r *taskDatabaseHelper) FindAll(ctx context.Context) ([]*models.Task, error
 		return nil, err
 	}
 
-	var output []*models.Task
+	output := make([]*models.Task, 0)
 	for _, task := range tasks {
 		output = append(output, &models.Task{
 			ID:          task.ID,
