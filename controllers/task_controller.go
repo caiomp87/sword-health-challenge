@@ -1,33 +1,154 @@
 package controllers
 
-import "github.com/gin-gonic/gin"
+import (
+	"context"
+	"errors"
+	"net/http"
+	"time"
 
-func CreateTask(ctx *gin.Context) {
-	ctx.JSON(200, gin.H{
-		"message": "post",
+	"github.com/caiomp87/sword-health-challenge/models"
+	"github.com/caiomp87/sword-health-challenge/repository"
+	"github.com/gin-gonic/gin"
+)
+
+func CreateTask(c *gin.Context) {
+	var task *models.Task
+	if err := c.BindJSON(&task); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error": err.Error(),
+		})
+		return
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
+	defer cancel()
+
+	if err := repository.TaskRepository.Create(ctx, task); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": err.Error(),
+		})
+		return
+	}
+
+	c.JSON(http.StatusCreated, gin.H{
+		"message": "task created successfully",
 	})
 }
 
-func GetTasks(ctx *gin.Context) {
-	ctx.JSON(200, gin.H{
-		"message": "gets",
+func GetTasks(c *gin.Context) {
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
+	defer cancel()
+
+	tasks, err := repository.TaskRepository.FindAll(ctx)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": err.Error(),
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, tasks)
+}
+
+func GetTask(c *gin.Context) {
+	id := c.Param("id")
+	if id == "" {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error": errors.New("id is required"),
+		})
+		return
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
+	defer cancel()
+
+	task, err := repository.TaskRepository.FindByID(ctx, id)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": err.Error(),
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, task)
+}
+
+func UpdateTask(c *gin.Context) {
+	id := c.Param("id")
+	if id == "" {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error": errors.New("id is required"),
+		})
+		return
+	}
+
+	var task *models.Task
+	if err := c.BindJSON(&task); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error": err.Error(),
+		})
+		return
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
+	defer cancel()
+
+	if err := repository.TaskRepository.UpdateByID(ctx, id, task); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": err.Error(),
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"message": "task updated successfully",
 	})
 }
 
-func GetTask(ctx *gin.Context) {
-	ctx.JSON(200, gin.H{
-		"message": "get",
+func DeleteTask(c *gin.Context) {
+	id := c.Param("id")
+	if id == "" {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error": errors.New("id is required"),
+		})
+		return
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
+	defer cancel()
+
+	if err := repository.TaskRepository.DeleteByID(ctx, id); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": err.Error(),
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"message": "task deleted successfully",
 	})
 }
 
-func UpdateTask(ctx *gin.Context) {
-	ctx.JSON(200, gin.H{
-		"message": "patch",
-	})
-}
+func DoneTask(c *gin.Context) {
+	id := c.Param("id")
+	if id == "" {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error": errors.New("id is required"),
+		})
+		return
+	}
 
-func DeleteTask(ctx *gin.Context) {
-	ctx.JSON(200, gin.H{
-		"message": "delete",
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
+	defer cancel()
+
+	if err := repository.TaskRepository.Done(ctx, id); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": err.Error(),
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"message": "task done successfully",
 	})
 }

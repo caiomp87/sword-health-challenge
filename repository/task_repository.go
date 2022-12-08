@@ -10,19 +10,21 @@ import (
 	"github.com/caiomp87/sword-health-challenge/sql/sqlc"
 )
 
-type TaskRepository struct {
+var TaskRepository interfaces.ITask
+
+type taskDatabaseHelper struct {
 	dbConn *sql.DB
 	*sqlc.Queries
 }
 
 func NewTaskRepository(dbConn *sql.DB) interfaces.ITask {
-	return &TaskRepository{
+	return &taskDatabaseHelper{
 		dbConn:  dbConn,
 		Queries: sqlc.New(dbConn),
 	}
 }
 
-func (r *TaskRepository) Create(ctx context.Context, task *models.Task) error {
+func (r *taskDatabaseHelper) Create(ctx context.Context, task *models.Task) error {
 	return r.Queries.CreateTask(ctx, sqlc.CreateTaskParams{
 		ID:      task.ID,
 		Name:    task.Name,
@@ -30,7 +32,7 @@ func (r *TaskRepository) Create(ctx context.Context, task *models.Task) error {
 	})
 }
 
-func (r *TaskRepository) FindAll(ctx context.Context) ([]*models.Task, error) {
+func (r *taskDatabaseHelper) FindAll(ctx context.Context) ([]*models.Task, error) {
 	tasks, err := r.Queries.FindAllTasks(ctx)
 	if err != nil {
 		return nil, err
@@ -50,7 +52,7 @@ func (r *TaskRepository) FindAll(ctx context.Context) ([]*models.Task, error) {
 	return output, nil
 }
 
-func (r *TaskRepository) FindByID(ctx context.Context, id string) (*models.Task, error) {
+func (r *taskDatabaseHelper) FindByID(ctx context.Context, id string) (*models.Task, error) {
 	task, err := r.Queries.FindTaskById(ctx, id)
 	if err != nil {
 		return nil, err
@@ -65,7 +67,7 @@ func (r *TaskRepository) FindByID(ctx context.Context, id string) (*models.Task,
 	}, nil
 }
 
-func (r *TaskRepository) UpdateByID(ctx context.Context, id string, task *models.Task) error {
+func (r *taskDatabaseHelper) UpdateByID(ctx context.Context, id string, task *models.Task) error {
 	return r.Queries.UpdateTask(ctx, sqlc.UpdateTaskParams{
 		ID:      id,
 		Name:    task.Name,
@@ -73,11 +75,11 @@ func (r *TaskRepository) UpdateByID(ctx context.Context, id string, task *models
 	})
 }
 
-func (r *TaskRepository) DeleteByID(ctx context.Context, id string) error {
+func (r *taskDatabaseHelper) DeleteByID(ctx context.Context, id string) error {
 	return r.Queries.DeleteTask(ctx, id)
 }
 
-func (r *TaskRepository) Done(ctx context.Context, id string) error {
+func (r *taskDatabaseHelper) Done(ctx context.Context, id string) error {
 	return r.Queries.DoneTask(ctx, sqlc.DoneTaskParams{
 		ID: id,
 		Performedat: sql.NullTime{

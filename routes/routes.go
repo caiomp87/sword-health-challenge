@@ -11,4 +11,5 @@ func AddRoutes(app *gin.Engine) {
 	app.GET("/task", controllers.GetTasks)
 	app.PATCH("/task/:id", controllers.UpdateTask)
 	app.DELETE("/task/:id", controllers.DeleteTask)
+	app.PATCH("/task/done/:id", controllers.DoneTask)
 }
