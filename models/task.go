@@ -9,3 +9,11 @@ type Task struct {
 	CreatedAt   time.Time
 	PerformedAt time.Time
 }
+
+func NewTask(id, name, summary string) *Task {
+	return &Task{
+		ID:      id,
+		Name:    name,
+		Summary: summary,
+	}
+}
