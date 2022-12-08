@@ -2,6 +2,7 @@ package interfaces
 
 import (
 	"context"
+	"database/sql"
 
 	"github.com/caiomp87/sword-health-challenge/models"
 )
@@ -13,4 +14,9 @@ type ITask interface {
 	UpdateByID(ctx context.Context, id string, task *models.Task) error
 	DeleteByID(ctx context.Context, id string) error
 	Done(ctx context.Context, id string) error
+}
+
+type IDatabase interface {
+	Connect() (*sql.DB, error)
+	Disconnect(db *sql.DB) error
 }
