@@ -15,9 +15,9 @@ INSERT INTO tasks (id, name, summary) VALUES (?, ?, ?)
 `
 
 type CreateTaskParams struct {
-	ID      string         `json:"id"`
-	Name    sql.NullString `json:"name"`
-	Summary sql.NullString `json:"summary"`
+	ID      string `json:"id"`
+	Name    string `json:"name"`
+	Summary string `json:"summary"`
 }
 
 func (q *Queries) CreateTask(ctx context.Context, arg CreateTaskParams) error {
@@ -34,29 +34,26 @@ func (q *Queries) DeleteTask(ctx context.Context, id string) error {
 	return err
 }
 
-const getTaskById = `-- name: GetTaskById :one
-SELECT id, name, summary, createdat, performedat FROM tasks WHERE id = ?
+const doneTask = `-- name: DoneTask :exec
+UPDATE tasks SET performedAt = ? WHERE id = ?
 `
 
-func (q *Queries) GetTaskById(ctx context.Context, id string) (Task, error) {
-	row := q.db.QueryRowContext(ctx, getTaskById, id)
-	var i Task
-	err := row.Scan(
-		&i.ID,
-		&i.Name,
-		&i.Summary,
-		&i.Createdat,
-		&i.Performedat,
-	)
-	return i, err
+type DoneTaskParams struct {
+	Performedat sql.NullTime `json:"performedat"`
+	ID          string       `json:"id"`
 }
 
-const getTasks = `-- name: GetTasks :many
+func (q *Queries) DoneTask(ctx context.Context, arg DoneTaskParams) error {
+	_, err := q.db.ExecContext(ctx, doneTask, arg.Performedat, arg.ID)
+	return err
+}
+
+const findAllTasks = `-- name: FindAllTasks :many
 SELECT id, name, summary, createdat, performedat FROM tasks
 `
 
-func (q *Queries) GetTasks(ctx context.Context) ([]Task, error) {
-	rows, err := q.db.QueryContext(ctx, getTasks)
+func (q *Queries) FindAllTasks(ctx context.Context) ([]Task, error) {
+	rows, err := q.db.QueryContext(ctx, findAllTasks)
 	if err != nil {
 		return nil, err
 	}
@@ -84,23 +81,34 @@ func (q *Queries) GetTasks(ctx context.Context) ([]Task, error) {
 	return items, nil
 }
 
+const findTaskById = `-- name: FindTaskById :one
+SELECT id, name, summary, createdat, performedat FROM tasks WHERE id = ?
+`
+
+func (q *Queries) FindTaskById(ctx context.Context, id string) (Task, error) {
+	row := q.db.QueryRowContext(ctx, findTaskById, id)
+	var i Task
+	err := row.Scan(
+		&i.ID,
+		&i.Name,
+		&i.Summary,
+		&i.Createdat,
+		&i.Performedat,
+	)
+	return i, err
+}
+
 const updateTask = `-- name: UpdateTask :exec
-UPDATE tasks SET name = ?, summary = ?, performedAt = ? WHERE id = ?
+UPDATE tasks SET name = ?, summary = ? WHERE id = ?
 `
 
 type UpdateTaskParams struct {
-	Name        sql.NullString `json:"name"`
-	Summary     sql.NullString `json:"summary"`
-	Performedat sql.NullTime   `json:"performedat"`
-	ID          string         `json:"id"`
+	Name    string `json:"name"`
+	Summary string `json:"summary"`
+	ID      string `json:"id"`
 }
 
 func (q *Queries) UpdateTask(ctx context.Context, arg UpdateTaskParams) error {
-	_, err := q.db.ExecContext(ctx, updateTask,
-		arg.Name,
-		arg.Summary,
-		arg.Performedat,
-		arg.ID,
-	)
+	_, err := q.db.ExecContext(ctx, updateTask, arg.Name, arg.Summary, arg.ID)
 	return err
 }

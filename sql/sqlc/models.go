@@ -9,9 +9,9 @@ import (
 )
 
 type Task struct {
-	ID          string         `json:"id"`
-	Name        sql.NullString `json:"name"`
-	Summary     sql.NullString `json:"summary"`
-	Createdat   sql.NullTime   `json:"createdat"`
-	Performedat sql.NullTime   `json:"performedat"`
+	ID          string       `json:"id"`
+	Name        string       `json:"name"`
+	Summary     string       `json:"summary"`
+	Createdat   sql.NullTime `json:"createdat"`
+	Performedat sql.NullTime `json:"performedat"`
 }
