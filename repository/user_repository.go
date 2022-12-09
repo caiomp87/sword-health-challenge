@@ -36,7 +36,7 @@ func (r *userDatabaseHelper) Create(ctx context.Context, user *models.User) erro
 }
 
 func (r *userDatabaseHelper) FindByID(ctx context.Context, id string) (*models.User, error) {
-	user, err := r.Queries.FindUserById(ctx, id)
+	user, err := r.Queries.FindUserByID(ctx, id)
 	if err != nil {
 		return nil, err
 	}

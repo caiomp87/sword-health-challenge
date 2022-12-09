@@ -13,6 +13,7 @@ var interceptedRoutes = map[string]string{
 
 var technicianPermissions = []string{
 	"GET/v1/task/:id",
+	"GET/v1/task/",
 	"POST/v1/task/",
 	"PATCH/v1/task/:id",
 	"PATCH/v1/task/done/:id",

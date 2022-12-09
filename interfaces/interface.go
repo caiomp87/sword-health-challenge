@@ -10,10 +10,12 @@ import (
 type ITask interface {
 	Create(ctx context.Context, task *models.Task) error
 	FindAll(ctx context.Context) ([]*models.Task, error)
+	FindAllByUserID(ctx context.Context, userID string) ([]*models.Task, error)
 	FindByID(ctx context.Context, id string) (*models.Task, error)
-	UpdateByID(ctx context.Context, id string, task *models.Task) error
+	FindByIDAndUserID(ctx context.Context, id, userID string) (*models.Task, error)
+	UpdateByID(ctx context.Context, id, userID string, task *models.Task) error
 	DeleteByID(ctx context.Context, id string) error
-	Done(ctx context.Context, id string) error
+	Done(ctx context.Context, id, userID string) error
 }
 
 type IUser interface {

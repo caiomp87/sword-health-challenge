@@ -72,17 +72,23 @@ func (q *Queries) DeleteTask(ctx context.Context, id string) error {
 }
 
 const doneTask = `-- name: DoneTask :exec
-UPDATE tasks SET performed = ?, performedAt = ? WHERE id = ?
+UPDATE tasks SET performed = ?, performedAt = ? WHERE id = ? AND user_id = ?
 `
 
 type DoneTaskParams struct {
 	Performed   bool      `json:"performed"`
 	Performedat time.Time `json:"performedat"`
 	ID          string    `json:"id"`
+	UserID      string    `json:"user_id"`
 }
 
 func (q *Queries) DoneTask(ctx context.Context, arg DoneTaskParams) error {
-	_, err := q.db.ExecContext(ctx, doneTask, arg.Performed, arg.Performedat, arg.ID)
+	_, err := q.db.ExecContext(ctx, doneTask,
+		arg.Performed,
+		arg.Performedat,
+		arg.ID,
+		arg.UserID,
+	)
 	return err
 }
 
@@ -121,12 +127,71 @@ func (q *Queries) FindAllTasks(ctx context.Context) ([]Task, error) {
 	return items, nil
 }
 
-const findTaskById = `-- name: FindTaskById :one
+const findAllTasksByUserID = `-- name: FindAllTasksByUserID :many
+SELECT id, name, summary, performed, createdat, performedat, user_id FROM tasks WHERE user_id = ?
+`
+
+func (q *Queries) FindAllTasksByUserID(ctx context.Context, userID string) ([]Task, error) {
+	rows, err := q.db.QueryContext(ctx, findAllTasksByUserID, userID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []Task
+	for rows.Next() {
+		var i Task
+		if err := rows.Scan(
+			&i.ID,
+			&i.Name,
+			&i.Summary,
+			&i.Performed,
+			&i.Createdat,
+			&i.Performedat,
+			&i.UserID,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const findTaskByID = `-- name: FindTaskByID :one
 SELECT id, name, summary, performed, createdat, performedat, user_id FROM tasks WHERE id = ?
 `
 
-func (q *Queries) FindTaskById(ctx context.Context, id string) (Task, error) {
-	row := q.db.QueryRowContext(ctx, findTaskById, id)
+func (q *Queries) FindTaskByID(ctx context.Context, id string) (Task, error) {
+	row := q.db.QueryRowContext(ctx, findTaskByID, id)
+	var i Task
+	err := row.Scan(
+		&i.ID,
+		&i.Name,
+		&i.Summary,
+		&i.Performed,
+		&i.Createdat,
+		&i.Performedat,
+		&i.UserID,
+	)
+	return i, err
+}
+
+const findTaskByIDAndUserID = `-- name: FindTaskByIDAndUserID :one
+SELECT id, name, summary, performed, createdat, performedat, user_id FROM tasks WHERE id = ? AND user_id = ?
+`
+
+type FindTaskByIDAndUserIDParams struct {
+	ID     string `json:"id"`
+	UserID string `json:"user_id"`
+}
+
+func (q *Queries) FindTaskByIDAndUserID(ctx context.Context, arg FindTaskByIDAndUserIDParams) (Task, error) {
+	row := q.db.QueryRowContext(ctx, findTaskByIDAndUserID, arg.ID, arg.UserID)
 	var i Task
 	err := row.Scan(
 		&i.ID,
@@ -158,12 +223,12 @@ func (q *Queries) FindUserByEmail(ctx context.Context, email string) (User, erro
 	return i, err
 }
 
-const findUserById = `-- name: FindUserById :one
+const findUserByID = `-- name: FindUserByID :one
 SELECT id, name, type, email, passwordhash, createdat FROM users WHERE id = ?
 `
 
-func (q *Queries) FindUserById(ctx context.Context, id string) (User, error) {
-	row := q.db.QueryRowContext(ctx, findUserById, id)
+func (q *Queries) FindUserByID(ctx context.Context, id string) (User, error) {
+	row := q.db.QueryRowContext(ctx, findUserByID, id)
 	var i User
 	err := row.Scan(
 		&i.ID,
@@ -177,16 +242,22 @@ func (q *Queries) FindUserById(ctx context.Context, id string) (User, error) {
 }
 
 const updateTask = `-- name: UpdateTask :exec
-UPDATE tasks SET name = ?, summary = ? WHERE id = ?
+UPDATE tasks SET name = ?, summary = ? WHERE id = ? AND user_id = ?
 `
 
 type UpdateTaskParams struct {
 	Name    string `json:"name"`
 	Summary string `json:"summary"`
 	ID      string `json:"id"`
+	UserID  string `json:"user_id"`
 }
 
 func (q *Queries) UpdateTask(ctx context.Context, arg UpdateTaskParams) error {
-	_, err := q.db.ExecContext(ctx, updateTask, arg.Name, arg.Summary, arg.ID)
+	_, err := q.db.ExecContext(ctx, updateTask,
+		arg.Name,
+		arg.Summary,
+		arg.ID,
+		arg.UserID,
+	)
 	return err
 }

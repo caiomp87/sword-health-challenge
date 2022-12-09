@@ -58,8 +58,31 @@ func (r *taskDatabaseHelper) FindAll(ctx context.Context) ([]*models.Task, error
 	return output, nil
 }
 
+func (r *taskDatabaseHelper) FindAllByUserID(ctx context.Context, userID string) ([]*models.Task, error) {
+	tasks, err := r.Queries.FindAllTasksByUserID(ctx, userID)
+	if err != nil {
+		return nil, err
+	}
+
+	output := make([]*models.Task, 0)
+	for _, task := range tasks {
+		output = append(output, &models.Task{
+			ID:          task.ID,
+			Name:        task.Name,
+			Summary:     task.Summary,
+			UserID:      task.UserID,
+			Performed:   task.Performed,
+			CreatedAt:   task.Createdat,
+			PerformedAt: task.Performedat,
+		})
+	}
+
+	return output, nil
+}
+
 func (r *taskDatabaseHelper) FindByID(ctx context.Context, id string) (*models.Task, error) {
-	task, err := r.Queries.FindTaskById(ctx, id)
+	task, err := r.Queries.FindTaskByID(ctx, id)
+
 	if err != nil {
 		return nil, err
 	}
@@ -75,9 +98,31 @@ func (r *taskDatabaseHelper) FindByID(ctx context.Context, id string) (*models.T
 	}, nil
 }
 
-func (r *taskDatabaseHelper) UpdateByID(ctx context.Context, id string, task *models.Task) error {
+func (r *taskDatabaseHelper) FindByIDAndUserID(ctx context.Context, id, userID string) (*models.Task, error) {
+	task, err := r.Queries.FindTaskByIDAndUserID(ctx, sqlc.FindTaskByIDAndUserIDParams{
+		ID:     id,
+		UserID: userID,
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	return &models.Task{
+		ID:          task.ID,
+		Name:        task.Name,
+		Summary:     task.Summary,
+		UserID:      task.UserID,
+		Performed:   task.Performed,
+		CreatedAt:   task.Createdat,
+		PerformedAt: task.Performedat,
+	}, nil
+}
+
+func (r *taskDatabaseHelper) UpdateByID(ctx context.Context, id, userID string, task *models.Task) error {
 	return r.Queries.UpdateTask(ctx, sqlc.UpdateTaskParams{
 		ID:      id,
+		UserID:  userID,
 		Name:    task.Name,
 		Summary: task.Summary,
 	})
@@ -87,9 +132,10 @@ func (r *taskDatabaseHelper) DeleteByID(ctx context.Context, id string) error {
 	return r.Queries.DeleteTask(ctx, id)
 }
 
-func (r *taskDatabaseHelper) Done(ctx context.Context, id string) error {
+func (r *taskDatabaseHelper) Done(ctx context.Context, id, userID string) error {
 	return r.Queries.DoneTask(ctx, sqlc.DoneTaskParams{
 		ID:          id,
+		UserID:      userID,
 		Performed:   true,
 		Performedat: time.Now(),
 	})

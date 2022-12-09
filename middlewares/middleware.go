@@ -36,26 +36,8 @@ func Authenticate() gin.HandlerFunc {
 			userID := claims["user_id"].(string)
 			userType := claims["user_type"].(string)
 
-			c.Set("userID", userID)
-			c.Set("userType", userType)
-
-			var isGranted bool
-			switch userType {
-			case "manager":
-				for _, permission := range managerPermissions {
-					if interceptorValue == permission {
-						isGranted = true
-						break
-					}
-				}
-			case "technician":
-				for _, permission := range technicianPermissions {
-					if interceptorValue == permission {
-						isGranted = true
-						break
-					}
-				}
-			default:
+			isGranted, err := isGranted(userType, interceptorValue)
+			if err != nil {
 				c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{
 					"error": "unsupported user type",
 				})
@@ -68,6 +50,9 @@ func Authenticate() gin.HandlerFunc {
 				})
 				return
 			}
+
+			c.Set("userID", userID)
+			c.Set("userType", userType)
 		}
 
 		c.Next()

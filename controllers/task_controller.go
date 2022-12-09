@@ -8,6 +8,7 @@ import (
 
 	"github.com/caiomp87/sword-health-challenge/models"
 	"github.com/caiomp87/sword-health-challenge/repository"
+	"github.com/caiomp87/sword-health-challenge/utils"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 )
@@ -21,10 +22,18 @@ func CreateTask(c *gin.Context) {
 		return
 	}
 
+	userID, err := utils.GetContextValue(c, "userID")
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": err.Error(),
+		})
+		return
+	}
+
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
 	defer cancel()
 
-	user, err := repository.UserRepository.FindByID(ctx, taskRaw.UserID)
+	user, err := repository.UserRepository.FindByID(ctx, userID)
 	if err != nil || user == nil {
 		c.JSON(http.StatusNotFound, gin.H{
 			"error": "user not found " + err.Error(),
@@ -32,7 +41,7 @@ func CreateTask(c *gin.Context) {
 		return
 	}
 
-	if strings.EqualFold(user.Type, "manager") {
+	if strings.EqualFold(user.Type, utils.UserType.Manager) {
 		c.JSON(http.StatusBadRequest, gin.H{
 			"error": "tasks can only be assigned to technicians",
 		})
@@ -43,7 +52,7 @@ func CreateTask(c *gin.Context) {
 		ID:      uuid.New().String(),
 		Name:    taskRaw.Name,
 		Summary: taskRaw.Summary,
-		UserID:  taskRaw.UserID,
+		UserID:  userID,
 	}
 
 	if err := repository.TaskRepository.Create(ctx, task); err != nil {
@@ -59,11 +68,39 @@ func CreateTask(c *gin.Context) {
 }
 
 func GetTasks(c *gin.Context) {
+	userType, err := utils.GetContextValue(c, "userType")
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": err.Error(),
+		})
+		return
+	}
+
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
 	defer cancel()
 
-	tasks, err := repository.TaskRepository.FindAll(ctx)
-	if err != nil {
+	var (
+		tasks   []*models.Task
+		userID  string
+		findErr error
+	)
+
+	switch userType {
+	case strings.ToLower(utils.UserType.Manager):
+		tasks, findErr = repository.TaskRepository.FindAll(ctx)
+	case strings.ToLower(utils.UserType.Technician):
+		userID, findErr = utils.GetContextValue(c, "userID")
+		if findErr != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{
+				"error": findErr.Error(),
+			})
+			return
+		}
+
+		tasks, findErr = repository.TaskRepository.FindAllByUserID(ctx, userID)
+	}
+
+	if findErr != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"error": err.Error(),
 		})
@@ -82,13 +119,40 @@ func GetTask(c *gin.Context) {
 		return
 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
-	defer cancel()
-
-	task, err := repository.TaskRepository.FindByID(ctx, id)
+	userType, err := utils.GetContextValue(c, "userType")
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"error": err.Error(),
+		})
+		return
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
+	defer cancel()
+
+	var (
+		task    *models.Task
+		userID  string
+		findErr error
+	)
+	switch userType {
+	case strings.ToLower(utils.UserType.Manager):
+		task, findErr = repository.TaskRepository.FindByID(ctx, id)
+	case strings.ToLower(utils.UserType.Technician):
+		userID, findErr = utils.GetContextValue(c, "userID")
+		if findErr != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{
+				"error": findErr.Error(),
+			})
+			return
+		}
+
+		task, findErr = repository.TaskRepository.FindByIDAndUserID(ctx, id, userID)
+	}
+
+	if findErr != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": findErr.Error(),
 		})
 		return
 	}
@@ -113,10 +177,18 @@ func UpdateTask(c *gin.Context) {
 		return
 	}
 
+	userID, err := utils.GetContextValue(c, "userID")
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": err.Error(),
+		})
+		return
+	}
+
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
 	defer cancel()
 
-	if err := repository.TaskRepository.UpdateByID(ctx, id, task); err != nil {
+	if err := repository.TaskRepository.UpdateByID(ctx, id, userID, task); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"error": err.Error(),
 		})
@@ -161,10 +233,18 @@ func DoneTask(c *gin.Context) {
 		return
 	}
 
+	userID, err := utils.GetContextValue(c, "userID")
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": err.Error(),
+		})
+		return
+	}
+
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
 	defer cancel()
 
-	if err := repository.TaskRepository.Done(ctx, id); err != nil {
+	if err := repository.TaskRepository.Done(ctx, id, userID); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"error": err.Error(),
 		})
