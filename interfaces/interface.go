@@ -29,3 +29,9 @@ type IDatabase interface {
 	Connect() (*sql.DB, error)
 	Disconnect(db *sql.DB) error
 }
+
+type ICache interface {
+	Publish(ctx context.Context, key string, payload []byte) error
+	Subscribe(ctx context.Context, key string) error
+	Ping(ctx context.Context) error
+}

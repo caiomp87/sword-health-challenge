@@ -1,9 +1,12 @@
 package main
 
 import (
+	"context"
 	"log"
 	"os"
+	"time"
 
+	"github.com/caiomp87/sword-health-challenge/cache"
 	"github.com/caiomp87/sword-health-challenge/db"
 	"github.com/caiomp87/sword-health-challenge/middlewares"
 	"github.com/caiomp87/sword-health-challenge/repository"
@@ -28,6 +31,14 @@ func main() {
 
 	repository.TaskRepository = repository.NewTaskRepository(database)
 	repository.UserRepository = repository.NewUserRepository(database)
+
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
+	defer cancel()
+
+	cache.CacheService = cache.NewCache()
+	if err := cache.CacheService.Ping(ctx); err != nil {
+		log.Fatalf("could not initialize cache: %v", err)
+	}
 
 	env, ok := os.LookupEnv("ENV")
 	if env == "production" || !ok {

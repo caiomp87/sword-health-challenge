@@ -2,10 +2,12 @@ package controllers
 
 import (
 	"context"
+	"encoding/json"
 	"net/http"
 	"strings"
 	"time"
 
+	"github.com/caiomp87/sword-health-challenge/cache"
 	"github.com/caiomp87/sword-health-challenge/models"
 	"github.com/caiomp87/sword-health-challenge/repository"
 	"github.com/caiomp87/sword-health-challenge/utils"
@@ -245,6 +247,23 @@ func DoneTask(c *gin.Context) {
 	defer cancel()
 
 	if err := repository.TaskRepository.Done(ctx, id, userID); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": err.Error(),
+		})
+		return
+	}
+
+	message := "tafera executada"
+
+	messageRaw, err := json.Marshal(message)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": err.Error(),
+		})
+		return
+	}
+
+	if err := cache.CacheService.Publish(ctx, "notification", messageRaw); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"error": err.Error(),
 		})
