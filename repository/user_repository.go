@@ -49,3 +49,19 @@ func (r *userDatabaseHelper) FindByID(ctx context.Context, id string) (*models.U
 		CreatedAt: user.Createdat,
 	}, nil
 }
+
+func (r *userDatabaseHelper) FindByEmail(ctx context.Context, email string) (*models.User, error) {
+	user, err := r.Queries.FindUserByEmail(ctx, email)
+	if err != nil {
+		return nil, err
+	}
+
+	return &models.User{
+		ID:           user.ID,
+		Name:         user.Name,
+		Type:         user.Type,
+		Email:        user.Email,
+		PasswordHash: user.Passwordhash,
+		CreatedAt:    user.Createdat,
+	}, nil
+}

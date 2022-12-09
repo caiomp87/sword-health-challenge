@@ -27,7 +27,7 @@ func CreateTask(c *gin.Context) {
 	user, err := repository.UserRepository.FindByID(ctx, taskRaw.UserID)
 	if err != nil || user == nil {
 		c.JSON(http.StatusNotFound, gin.H{
-			"error": "user not found: " + err.Error(),
+			"error": "user not found " + err.Error(),
 		})
 		return
 	}

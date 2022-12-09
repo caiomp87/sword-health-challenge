@@ -140,6 +140,24 @@ func (q *Queries) FindTaskById(ctx context.Context, id string) (Task, error) {
 	return i, err
 }
 
+const findUserByEmail = `-- name: FindUserByEmail :one
+SELECT id, name, type, email, passwordhash, createdat FROM users WHERE email = ?
+`
+
+func (q *Queries) FindUserByEmail(ctx context.Context, email string) (User, error) {
+	row := q.db.QueryRowContext(ctx, findUserByEmail, email)
+	var i User
+	err := row.Scan(
+		&i.ID,
+		&i.Name,
+		&i.Type,
+		&i.Email,
+		&i.Passwordhash,
+		&i.Createdat,
+	)
+	return i, err
+}
+
 const findUserById = `-- name: FindUserById :one
 SELECT id, name, type, email, passwordhash, createdat FROM users WHERE id = ?
 `

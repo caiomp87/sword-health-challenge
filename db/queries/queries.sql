@@ -21,3 +21,6 @@ INSERT INTO users (id, name, type, email, passwordHash, createdAt) VALUES (?, ?,
 
 -- name: FindUserById :one
 SELECT * FROM users WHERE id = ?;
+
+-- name: FindUserByEmail :one
+SELECT * FROM users WHERE email = ?;
