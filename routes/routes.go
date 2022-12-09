@@ -8,14 +8,14 @@ import (
 func AddRoutes(app *gin.Engine) {
 	v1 := app.Group("v1")
 	{
-		user := v1.Group("user")
-		{
-			user.POST("/", controllers.CreateUser)
-		}
-
 		login := v1.Group("login")
 		{
 			login.POST("/", controllers.Login)
+		}
+
+		user := v1.Group("user")
+		{
+			user.POST("/", controllers.CreateUser)
 		}
 
 		task := v1.Group("task")

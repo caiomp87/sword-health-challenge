@@ -5,6 +5,7 @@ import (
 	"os"
 
 	"github.com/caiomp87/sword-health-challenge/db"
+	"github.com/caiomp87/sword-health-challenge/middlewares"
 	"github.com/caiomp87/sword-health-challenge/repository"
 	"github.com/caiomp87/sword-health-challenge/routes"
 	"github.com/gin-gonic/gin"
@@ -34,6 +35,7 @@ func main() {
 	}
 
 	app := gin.Default()
+	app.Use(middlewares.Authenticate())
 	routes.AddRoutes(app)
 
 	log.Println("API listening on port 3333")
