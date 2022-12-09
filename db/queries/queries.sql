@@ -25,6 +25,9 @@ SELECT * FROM tasks WHERE user_id = ?;
 -- name: CreateUser :exec
 INSERT INTO users (id, name, type, email, passwordHash, createdAt) VALUES (?, ?, ?, ?, ?, ?);
 
+-- name: FindAllUsers :many
+SELECT * FROM users;
+
 -- name: FindUserByID :one
 SELECT * FROM users WHERE id = ?;
 

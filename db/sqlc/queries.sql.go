@@ -162,6 +162,40 @@ func (q *Queries) FindAllTasksByUserID(ctx context.Context, userID string) ([]Ta
 	return items, nil
 }
 
+const findAllUsers = `-- name: FindAllUsers :many
+SELECT id, name, type, email, passwordhash, createdat FROM users
+`
+
+func (q *Queries) FindAllUsers(ctx context.Context) ([]User, error) {
+	rows, err := q.db.QueryContext(ctx, findAllUsers)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []User
+	for rows.Next() {
+		var i User
+		if err := rows.Scan(
+			&i.ID,
+			&i.Name,
+			&i.Type,
+			&i.Email,
+			&i.Passwordhash,
+			&i.Createdat,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const findTaskByID = `-- name: FindTaskByID :one
 SELECT id, name, summary, performed, createdat, performedat, user_id FROM tasks WHERE id = ?
 `

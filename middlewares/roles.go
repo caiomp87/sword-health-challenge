@@ -21,6 +21,8 @@ var technicianPermissions = []string{
 
 var managerPermissions = []string{
 	"POST/v1/user/",
+	"GET/v1/user/",
+	"GET/v1/user/:id",
 	"GET/v1/task/",
 	"GET/v1/task/:id",
 	"DELETE/v1/task/:id",

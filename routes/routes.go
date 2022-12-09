@@ -16,13 +16,15 @@ func AddRoutes(app *gin.Engine) {
 		user := v1.Group("user")
 		{
 			user.POST("/", controllers.CreateUser)
+			user.GET("/", controllers.GetUsers)
+			user.GET("/:id", controllers.GetUser)
 		}
 
 		task := v1.Group("task")
 		{
 			task.POST("/", controllers.CreateTask)
-			task.GET("/:id", controllers.GetTask)
 			task.GET("/", controllers.GetTasks)
+			task.GET("/:id", controllers.GetTask)
 			task.PATCH("/:id", controllers.UpdateTask)
 			task.DELETE("/:id", controllers.DeleteTask)
 			task.PATCH("/done/:id", controllers.DoneTask)

@@ -35,6 +35,26 @@ func (r *userDatabaseHelper) Create(ctx context.Context, user *models.User) erro
 	})
 }
 
+func (r *userDatabaseHelper) FindAll(ctx context.Context) ([]*models.User, error) {
+	users, err := r.Queries.FindAllUsers(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	output := make([]*models.User, 0)
+	for _, user := range users {
+		output = append(output, &models.User{
+			ID:        user.ID,
+			Name:      user.Name,
+			Type:      user.Type,
+			Email:     user.Email,
+			CreatedAt: user.Createdat,
+		})
+	}
+
+	return output, nil
+}
+
 func (r *userDatabaseHelper) FindByID(ctx context.Context, id string) (*models.User, error) {
 	user, err := r.Queries.FindUserByID(ctx, id)
 	if err != nil {
