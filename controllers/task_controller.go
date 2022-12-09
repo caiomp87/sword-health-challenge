@@ -2,8 +2,8 @@ package controllers
 
 import (
 	"context"
-	"errors"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/caiomp87/sword-health-challenge/models"
@@ -21,10 +21,30 @@ func CreateTask(c *gin.Context) {
 		return
 	}
 
-	task := models.NewTask(uuid.New().String(), taskRaw.Name, taskRaw.Summary)
-
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
 	defer cancel()
+
+	user, err := repository.UserRepository.FindByID(ctx, taskRaw.UserID)
+	if err != nil || user == nil {
+		c.JSON(http.StatusNotFound, gin.H{
+			"error": "user not found: " + err.Error(),
+		})
+		return
+	}
+
+	if strings.EqualFold(user.Type, "manager") {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error": "tasks can only be assigned to technicians",
+		})
+		return
+	}
+
+	task := &models.Task{
+		ID:      uuid.New().String(),
+		Name:    taskRaw.Name,
+		Summary: taskRaw.Summary,
+		UserID:  taskRaw.UserID,
+	}
 
 	if err := repository.TaskRepository.Create(ctx, task); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
@@ -57,7 +77,7 @@ func GetTask(c *gin.Context) {
 	id := c.Param("id")
 	if id == "" {
 		c.JSON(http.StatusBadRequest, gin.H{
-			"error": errors.New("id is required"),
+			"error": "id is required",
 		})
 		return
 	}
@@ -80,7 +100,7 @@ func UpdateTask(c *gin.Context) {
 	id := c.Param("id")
 	if id == "" {
 		c.JSON(http.StatusBadRequest, gin.H{
-			"error": errors.New("id is required"),
+			"error": "id is required",
 		})
 		return
 	}
@@ -112,7 +132,7 @@ func DeleteTask(c *gin.Context) {
 	id := c.Param("id")
 	if id == "" {
 		c.JSON(http.StatusBadRequest, gin.H{
-			"error": errors.New("id is required"),
+			"error": "id is required",
 		})
 		return
 	}
@@ -136,7 +156,7 @@ func DoneTask(c *gin.Context) {
 	id := c.Param("id")
 	if id == "" {
 		c.JSON(http.StatusBadRequest, gin.H{
-			"error": errors.New("id is required"),
+			"error": "id is required",
 		})
 		return
 	}

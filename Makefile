@@ -5,7 +5,7 @@ migrate-up:
 	migrate -database "${DB_URI}" -path db/migrations up
 
 migrate-down:
-	migrate -database "${DB_URI}" -path db/migrations down -y
+	migrate -database "${DB_URI}" -path db/migrations down
 
 generate-sqlc:
 	sqlc generate

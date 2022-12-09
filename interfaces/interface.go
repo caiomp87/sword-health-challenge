@@ -16,6 +16,11 @@ type ITask interface {
 	Done(ctx context.Context, id string) error
 }
 
+type IUser interface {
+	Create(ctx context.Context, user *models.User) error
+	FindByID(ctx context.Context, id string) (*models.User, error)
+}
+
 type IDatabase interface {
 	Connect() (*sql.DB, error)
 	Disconnect(db *sql.DB) error

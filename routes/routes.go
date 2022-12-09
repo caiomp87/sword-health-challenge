@@ -6,6 +6,8 @@ import (
 )
 
 func AddRoutes(app *gin.Engine) {
+	app.POST("/user", controllers.CreateUser)
+
 	app.POST("/task", controllers.CreateTask)
 	app.GET("/task/:id", controllers.GetTask)
 	app.GET("/task", controllers.GetTasks)

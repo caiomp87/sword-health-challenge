@@ -26,6 +26,7 @@ func main() {
 	}()
 
 	repository.TaskRepository = repository.NewTaskRepository(database)
+	repository.UserRepository = repository.NewUserRepository(database)
 
 	env, ok := os.LookupEnv("ENV")
 	if env == "production" || !ok {
