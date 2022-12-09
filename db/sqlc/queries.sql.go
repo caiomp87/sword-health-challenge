@@ -7,21 +7,31 @@ package sqlc
 
 import (
 	"context"
-	"database/sql"
+	"time"
 )
 
 const createTask = `-- name: CreateTask :exec
-INSERT INTO tasks (id, name, summary) VALUES (?, ?, ?)
+INSERT INTO tasks (id, name, summary, performed, createdAt, performedAt) VALUES (?, ?, ?, ?, ?, ?)
 `
 
 type CreateTaskParams struct {
-	ID      string `json:"id"`
-	Name    string `json:"name"`
-	Summary string `json:"summary"`
+	ID          string    `json:"id"`
+	Name        string    `json:"name"`
+	Summary     string    `json:"summary"`
+	Performed   bool      `json:"performed"`
+	Createdat   time.Time `json:"createdat"`
+	Performedat time.Time `json:"performedat"`
 }
 
 func (q *Queries) CreateTask(ctx context.Context, arg CreateTaskParams) error {
-	_, err := q.db.ExecContext(ctx, createTask, arg.ID, arg.Name, arg.Summary)
+	_, err := q.db.ExecContext(ctx, createTask,
+		arg.ID,
+		arg.Name,
+		arg.Summary,
+		arg.Performed,
+		arg.Createdat,
+		arg.Performedat,
+	)
 	return err
 }
 
@@ -35,21 +45,22 @@ func (q *Queries) DeleteTask(ctx context.Context, id string) error {
 }
 
 const doneTask = `-- name: DoneTask :exec
-UPDATE tasks SET performedAt = ? WHERE id = ?
+UPDATE tasks SET performed = ?, performedAt = ? WHERE id = ?
 `
 
 type DoneTaskParams struct {
-	Performedat sql.NullTime `json:"performedat"`
-	ID          string       `json:"id"`
+	Performed   bool      `json:"performed"`
+	Performedat time.Time `json:"performedat"`
+	ID          string    `json:"id"`
 }
 
 func (q *Queries) DoneTask(ctx context.Context, arg DoneTaskParams) error {
-	_, err := q.db.ExecContext(ctx, doneTask, arg.Performedat, arg.ID)
+	_, err := q.db.ExecContext(ctx, doneTask, arg.Performed, arg.Performedat, arg.ID)
 	return err
 }
 
 const findAllTasks = `-- name: FindAllTasks :many
-SELECT id, name, summary, createdat, performedat FROM tasks
+SELECT id, name, summary, performed, createdat, performedat FROM tasks
 `
 
 func (q *Queries) FindAllTasks(ctx context.Context) ([]Task, error) {
@@ -65,6 +76,7 @@ func (q *Queries) FindAllTasks(ctx context.Context) ([]Task, error) {
 			&i.ID,
 			&i.Name,
 			&i.Summary,
+			&i.Performed,
 			&i.Createdat,
 			&i.Performedat,
 		); err != nil {
@@ -82,7 +94,7 @@ func (q *Queries) FindAllTasks(ctx context.Context) ([]Task, error) {
 }
 
 const findTaskById = `-- name: FindTaskById :one
-SELECT id, name, summary, createdat, performedat FROM tasks WHERE id = ?
+SELECT id, name, summary, performed, createdat, performedat FROM tasks WHERE id = ?
 `
 
 func (q *Queries) FindTaskById(ctx context.Context, id string) (Task, error) {
@@ -92,6 +104,7 @@ func (q *Queries) FindTaskById(ctx context.Context, id string) (Task, error) {
 		&i.ID,
 		&i.Name,
 		&i.Summary,
+		&i.Performed,
 		&i.Createdat,
 		&i.Performedat,
 	)

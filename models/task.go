@@ -6,6 +6,7 @@ type Task struct {
 	ID          string    `json:"id,omitempty"`
 	Name        string    `json:"name,omitempty"`
 	Summary     string    `json:"summary,omitempty"`
+	Performed   bool      `json:"performed"`
 	CreatedAt   time.Time `json:"createdAt,omitempty"`
 	PerformedAt time.Time `json:"performedAt,omitempty"`
 }

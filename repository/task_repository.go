@@ -26,9 +26,12 @@ func NewTaskRepository(dbConn *sql.DB) interfaces.ITask {
 
 func (r *taskDatabaseHelper) Create(ctx context.Context, task *models.Task) error {
 	return r.Queries.CreateTask(ctx, sqlc.CreateTaskParams{
-		ID:      task.ID,
-		Name:    task.Name,
-		Summary: task.Summary,
+		ID:          task.ID,
+		Name:        task.Name,
+		Summary:     task.Summary,
+		Performed:   false,
+		Createdat:   time.Now(),
+		Performedat: time.Now(),
 	})
 }
 
@@ -44,8 +47,9 @@ func (r *taskDatabaseHelper) FindAll(ctx context.Context) ([]*models.Task, error
 			ID:          task.ID,
 			Name:        task.Name,
 			Summary:     task.Summary,
-			CreatedAt:   task.Createdat.Time,
-			PerformedAt: task.Performedat.Time,
+			Performed:   task.Performed,
+			CreatedAt:   task.Createdat,
+			PerformedAt: task.Performedat,
 		})
 	}
 
@@ -62,8 +66,9 @@ func (r *taskDatabaseHelper) FindByID(ctx context.Context, id string) (*models.T
 		ID:          task.ID,
 		Name:        task.Name,
 		Summary:     task.Summary,
-		CreatedAt:   task.Createdat.Time,
-		PerformedAt: task.Performedat.Time,
+		Performed:   task.Performed,
+		CreatedAt:   task.Createdat,
+		PerformedAt: task.Performedat,
 	}, nil
 }
 
@@ -81,9 +86,8 @@ func (r *taskDatabaseHelper) DeleteByID(ctx context.Context, id string) error {
 
 func (r *taskDatabaseHelper) Done(ctx context.Context, id string) error {
 	return r.Queries.DoneTask(ctx, sqlc.DoneTaskParams{
-		ID: id,
-		Performedat: sql.NullTime{
-			Time: time.Now(),
-		},
+		ID:          id,
+		Performed:   true,
+		Performedat: time.Now(),
 	})
 }
