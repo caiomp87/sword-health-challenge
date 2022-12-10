@@ -267,8 +267,6 @@ func DoneTask(c *gin.Context) {
 	caser := cases.Title(language.AmericanEnglish)
 	msg := fmt.Sprintf(cache.NotificationMessage, caser.String(user.Name), id, time.Now().Format(time.Stamp))
 
-	fmt.Println(msg)
-
 	msgRaw, err := json.Marshal(msg)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
