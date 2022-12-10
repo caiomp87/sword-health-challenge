@@ -3,6 +3,7 @@ package controllers
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"strings"
 	"time"
@@ -13,6 +14,8 @@ import (
 	"github.com/caiomp87/sword-health-challenge/utils"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
+	"golang.org/x/text/cases"
+	"golang.org/x/text/language"
 )
 
 func CreateTask(c *gin.Context) {
@@ -246,16 +249,7 @@ func DoneTask(c *gin.Context) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
 	defer cancel()
 
-	if err := repository.TaskRepository.Done(ctx, id, userID); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{
-			"error": err.Error(),
-		})
-		return
-	}
-
-	message := "tafera executada"
-
-	messageRaw, err := json.Marshal(message)
+	user, err := repository.UserRepository.FindByID(ctx, userID)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"error": err.Error(),
@@ -263,7 +257,27 @@ func DoneTask(c *gin.Context) {
 		return
 	}
 
-	if err := cache.CacheService.Publish(ctx, "notification", messageRaw); err != nil {
+	if err := repository.TaskRepository.Done(ctx, id, userID); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": err.Error(),
+		})
+		return
+	}
+
+	caser := cases.Title(language.AmericanEnglish)
+	msg := fmt.Sprintf(notificationMessage, caser.String(user.Name), id, time.Now().Format(time.Stamp))
+
+	fmt.Println(msg)
+
+	msgRaw, err := json.Marshal(msg)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": err.Error(),
+		})
+		return
+	}
+
+	if err := cache.CacheService.Publish(ctx, cacheKey, msgRaw); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"error": err.Error(),
 		})
