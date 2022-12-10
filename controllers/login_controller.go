@@ -5,7 +5,6 @@ import (
 	"encoding/base64"
 	"net/http"
 	"os"
-	"strings"
 	"time"
 
 	"github.com/caiomp87/sword-health-challenge/models"
@@ -69,7 +68,7 @@ func generateToken(user *models.User) (string, error) {
 	claims := jwt.MapClaims{}
 	claims["authorized"] = true
 	claims["user_id"] = user.ID
-	claims["user_type"] = strings.ToLower(user.Type)
+	claims["user_type"] = user.Type
 	claims["exp"] = time.Now().Add(time.Minute * 15).Unix()
 
 	jwtToken := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)

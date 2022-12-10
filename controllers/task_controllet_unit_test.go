@@ -25,7 +25,7 @@ func TestCreateTask(t *testing.T) {
 	gin.SetMode(gin.ReleaseMode)
 
 	t.Run("failed - bind json", func(t *testing.T) {
-		expectMsgError := `{"error":"json: cannot unmarshal number into Go struct field Task.name of type string"}`
+		expectedMsgError := `{"error":"json: cannot unmarshal number into Go struct field Task.name of type string"}`
 
 		w := httptest.NewRecorder()
 		c, app := gin.CreateTestContext(w)
@@ -46,11 +46,11 @@ func TestCreateTask(t *testing.T) {
 		app.ServeHTTP(w, c.Request)
 
 		assert.Equal(http.StatusBadRequest, w.Code)
-		assert.Equal(expectMsgError, w.Body.String())
+		assert.Equal(expectedMsgError, w.Body.String())
 	})
 
 	t.Run("failed - get context value", func(t *testing.T) {
-		expectMsgError := `{"error":"userID not provided"}`
+		expectedMsgError := `{"error":"userID not provided"}`
 
 		w := httptest.NewRecorder()
 		c, app := gin.CreateTestContext(w)
@@ -71,15 +71,14 @@ func TestCreateTask(t *testing.T) {
 		app.ServeHTTP(w, c.Request)
 
 		assert.Equal(http.StatusInternalServerError, w.Code)
-		assert.Equal(expectMsgError, w.Body.String())
+		assert.Equal(expectedMsgError, w.Body.String())
 	})
 
 	t.Run("failed - find user by id", func(t *testing.T) {
-		expectMsgError := `{"error":"user not found no sql rows in result"}`
+		expectedMsgError := `{"error":"user not found no sql rows in result"}`
 
 		w := httptest.NewRecorder()
 		c, app := gin.CreateTestContext(w)
-		c.Set("userID", "123")
 
 		app.Use(func(c *gin.Context) {
 			c.Set("userID", "123")
@@ -106,15 +105,14 @@ func TestCreateTask(t *testing.T) {
 		app.ServeHTTP(w, c.Request)
 
 		assert.Equal(http.StatusNotFound, w.Code)
-		assert.Equal(expectMsgError, w.Body.String())
+		assert.Equal(expectedMsgError, w.Body.String())
 	})
 
 	t.Run("failed - user type equal manager", func(t *testing.T) {
-		expectMsgError := `{"error":"tasks can only be assigned to technicians"}`
+		expectedMsgError := `{"error":"tasks can only be assigned to technicians"}`
 
 		w := httptest.NewRecorder()
 		c, app := gin.CreateTestContext(w)
-		c.Set("userID", "123")
 
 		app.Use(func(c *gin.Context) {
 			c.Set("userID", "123")
@@ -143,15 +141,14 @@ func TestCreateTask(t *testing.T) {
 		app.ServeHTTP(w, c.Request)
 
 		assert.Equal(http.StatusBadRequest, w.Code)
-		assert.Equal(expectMsgError, w.Body.String())
+		assert.Equal(expectedMsgError, w.Body.String())
 	})
 
 	t.Run("failed - create task", func(t *testing.T) {
-		expectMsgError := `{"error":"error to create in database"}`
+		expectedMsgError := `{"error":"error to create in database"}`
 
 		w := httptest.NewRecorder()
 		c, app := gin.CreateTestContext(w)
-		c.Set("userID", "123")
 
 		app.Use(func(c *gin.Context) {
 			c.Set("userID", "123")
@@ -184,15 +181,14 @@ func TestCreateTask(t *testing.T) {
 		app.ServeHTTP(w, c.Request)
 
 		assert.Equal(http.StatusInternalServerError, w.Code)
-		assert.Equal(expectMsgError, w.Body.String())
+		assert.Equal(expectedMsgError, w.Body.String())
 	})
 
 	t.Run("success - task created", func(t *testing.T) {
-		expectMsg := `{"message":"task created successfully"}`
+		expectedMsg := `{"message":"task created successfully"}`
 
 		w := httptest.NewRecorder()
 		c, app := gin.CreateTestContext(w)
-		c.Set("userID", "123")
 
 		app.Use(func(c *gin.Context) {
 			c.Set("userID", "123")
@@ -225,6 +221,135 @@ func TestCreateTask(t *testing.T) {
 		app.ServeHTTP(w, c.Request)
 
 		assert.Equal(http.StatusCreated, w.Code)
-		assert.Equal(expectMsg, w.Body.String())
+		assert.Equal(expectedMsg, w.Body.String())
+	})
+}
+
+func TestGetTasks(t *testing.T) {
+	assert := assert.New(t)
+
+	gin.SetMode(gin.ReleaseMode)
+
+	t.Run("failed - get context value", func(t *testing.T) {
+		expectedMsgError := `{"error":"userType not provided"}`
+
+		w := httptest.NewRecorder()
+		c, app := gin.CreateTestContext(w)
+		app.Use(func(c *gin.Context) {})
+		routes.AddRoutes(app)
+
+		c.Request, _ = http.NewRequest(http.MethodGet, "/v1/task/", nil)
+
+		app.ServeHTTP(w, c.Request)
+
+		assert.Equal(http.StatusInternalServerError, w.Code)
+		assert.Equal(expectedMsgError, w.Body.String())
+	})
+
+	t.Run("failed - find all", func(t *testing.T) {
+		expectedMsgError := `{"error":"no sql rows in result"}`
+
+		w := httptest.NewRecorder()
+		c, app := gin.CreateTestContext(w)
+
+		app.Use(func(c *gin.Context) {
+			c.Set("userType", utils.UserType.Manager)
+		})
+		routes.AddRoutes(app)
+
+		var tasks []*models.Task
+
+		iTaskMock := new(mock.ITask)
+		iTaskMock.On("FindAll", tmock.Anything).Return(tasks, errors.New("no sql rows in result"))
+		repository.TaskRepository = iTaskMock
+
+		c.Request, _ = http.NewRequest(http.MethodGet, "/v1/task/", nil)
+
+		app.ServeHTTP(w, c.Request)
+
+		assert.Equal(http.StatusInternalServerError, w.Code)
+		assert.Equal(expectedMsgError, w.Body.String())
+	})
+
+	t.Run("failed - find all by user id without user id", func(t *testing.T) {
+		expectedMsgError := `{"error":"userID not provided"}`
+
+		w := httptest.NewRecorder()
+		c, app := gin.CreateTestContext(w)
+
+		app.Use(func(c *gin.Context) {
+			c.Set("userType", utils.UserType.Technician)
+		})
+		routes.AddRoutes(app)
+
+		c.Request, _ = http.NewRequest(http.MethodGet, "/v1/task/", nil)
+
+		app.ServeHTTP(w, c.Request)
+
+		assert.Equal(http.StatusInternalServerError, w.Code)
+		assert.Equal(expectedMsgError, w.Body.String())
+	})
+
+	t.Run("failed - find all by user id with user id", func(t *testing.T) {
+		expectedMsgError := `{"error":"no sql rows in result"}`
+
+		w := httptest.NewRecorder()
+		c, app := gin.CreateTestContext(w)
+
+		app.Use(func(c *gin.Context) {
+			c.Set("userType", utils.UserType.Technician)
+			c.Set("userID", "123")
+		})
+		routes.AddRoutes(app)
+
+		var tasks []*models.Task
+
+		iTaskMock := new(mock.ITask)
+		iTaskMock.On("FindAllByUserID", tmock.Anything, tmock.Anything).Return(tasks, errors.New("no sql rows in result"))
+		repository.TaskRepository = iTaskMock
+
+		c.Request, _ = http.NewRequest(http.MethodGet, "/v1/task/", nil)
+
+		app.ServeHTTP(w, c.Request)
+
+		assert.Equal(http.StatusInternalServerError, w.Code)
+		assert.Equal(expectedMsgError, w.Body.String())
+	})
+
+	t.Run("success - get tasks", func(t *testing.T) {
+		expectedMsg := `[{"id":"111","name":"Task 1","summary":"Summary 1","performed":false,"userID":"","createdAt":"0001-01-01T00:00:00Z","performedAt":"0001-01-01T00:00:00Z"},{"id":"222","name":"Task 2","summary":"Summary 2","performed":false,"userID":"","createdAt":"0001-01-01T00:00:00Z","performedAt":"0001-01-01T00:00:00Z"}]`
+
+		w := httptest.NewRecorder()
+		c, app := gin.CreateTestContext(w)
+
+		app.Use(func(c *gin.Context) {
+			c.Set("userType", utils.UserType.Technician)
+			c.Set("userID", "123")
+		})
+		routes.AddRoutes(app)
+
+		var tasks = []*models.Task{
+			{
+				ID:      "111",
+				Name:    "Task 1",
+				Summary: "Summary 1",
+			},
+			{
+				ID:      "222",
+				Name:    "Task 2",
+				Summary: "Summary 2",
+			},
+		}
+
+		iTaskMock := new(mock.ITask)
+		iTaskMock.On("FindAllByUserID", tmock.Anything, tmock.Anything).Return(tasks, nil)
+		repository.TaskRepository = iTaskMock
+
+		c.Request, _ = http.NewRequest(http.MethodGet, "/v1/task/", nil)
+
+		app.ServeHTTP(w, c.Request)
+
+		assert.Equal(http.StatusOK, w.Code)
+		assert.Equal(expectedMsg, w.Body.String())
 	})
 }

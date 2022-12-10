@@ -91,9 +91,9 @@ func GetTasks(c *gin.Context) {
 	)
 
 	switch userType {
-	case strings.ToLower(utils.UserType.Manager):
+	case utils.UserType.Manager:
 		tasks, findErr = repository.TaskRepository.FindAll(ctx)
-	case strings.ToLower(utils.UserType.Technician):
+	case utils.UserType.Technician:
 		userID, findErr = utils.GetContextValue(c, "userID")
 		if findErr != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{
@@ -107,7 +107,7 @@ func GetTasks(c *gin.Context) {
 
 	if findErr != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
-			"error": err.Error(),
+			"error": findErr.Error(),
 		})
 		return
 	}
