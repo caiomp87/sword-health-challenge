@@ -15,3 +15,7 @@ run:
 
 build:
 	go build -o app ./main.go
+
+generate-mock:
+	mockery --name=ITask --filename=task.go --outpkg=mock --dir=interfaces --output=mock
+	mockery --name=IUser --filename=user.go --outpkg=mock --dir=interfaces --output=mock

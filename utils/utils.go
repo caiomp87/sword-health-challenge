@@ -17,12 +17,12 @@ var UserType = struct {
 func GetContextValue(c *gin.Context, key string) (string, error) {
 	valueRaw, ok := c.Get(key)
 	if !ok || valueRaw == nil {
-		return "", errors.New(key + "not provided")
+		return "", errors.New(key + " not provided")
 	}
 
 	value, ok := valueRaw.(string)
 	if !ok || value == "" {
-		return "", errors.New(key + "not provided")
+		return "", errors.New(key + " not provided")
 	}
 
 	return value, nil
