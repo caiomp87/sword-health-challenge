@@ -12,6 +12,7 @@ This service is an API that manages the tasks performed during a working day. In
 - `CACHE_URL` (redis url server)
 
 ### Commands
+- `make docker-compose-up` (up all the dependencies services e.g. MySQL, Redis)
 - `make run` (execute the application)
 - `make build` (generate application binary)
 
