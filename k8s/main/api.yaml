@@ -1,0 +1,12 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: sword-health
+spec:
+  template:
+    spec:
+      containers:
+      - name: sword-health
+        env:
+          - name: ENV
+            value: "production"

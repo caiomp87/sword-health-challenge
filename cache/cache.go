@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"os"
 	"time"
 
 	"github.com/caiomp87/sword-health-challenge/interfaces"
@@ -19,10 +20,11 @@ type cacheHelper struct {
 
 func NewCache() interfaces.ICache {
 	client := redis.NewClient(&redis.Options{
-		Addr:         "localhost:6379",
+		Addr:         os.Getenv("CACHE_URL"),
 		DB:           0,
 		MaxRetries:   3,
 		WriteTimeout: time.Second * 5,
+		ReadTimeout:  time.Second * 5,
 	})
 
 	return &cacheHelper{
