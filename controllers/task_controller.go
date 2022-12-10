@@ -265,7 +265,7 @@ func DoneTask(c *gin.Context) {
 	}
 
 	caser := cases.Title(language.AmericanEnglish)
-	msg := fmt.Sprintf(notificationMessage, caser.String(user.Name), id, time.Now().Format(time.Stamp))
+	msg := fmt.Sprintf(cache.NotificationMessage, caser.String(user.Name), id, time.Now().Format(time.Stamp))
 
 	fmt.Println(msg)
 
@@ -277,7 +277,7 @@ func DoneTask(c *gin.Context) {
 		return
 	}
 
-	if err := cache.CacheService.Publish(ctx, cacheKey, msgRaw); err != nil {
+	if err := cache.CacheService.Publish(ctx, cache.CacheKey, msgRaw); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"error": err.Error(),
 		})
